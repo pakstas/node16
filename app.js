@@ -32,8 +32,44 @@ con.query("SHOW tables like 'scores'", (err, result) => {
 app.use(bp.json());
 app.use(cors());
 
-app.get("/", (req, res) => {
-  con.query("SELECT * FROM scores", (err, result) => {
+app.get("/people/:name?", (req, res) => {
+  if (req.params.name) {
+    con.query(
+      `SELECT * FROM scores WHERE name = '${req.params.name}'`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          res.status(400).send("Not OK");
+        } else {
+          res.json(result);
+        }
+      }
+    );
+  } else {
+    con.query("SELECT * FROM scores", (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(400).send("NOT OK");
+      } else {
+        res.json(result);
+      }
+    });
+  }
+});
+
+app.get("/subjects", (req, res) => {
+  con.query(`SELECT DISTINCT subject FROM scores`, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(400).send("NOT OK");
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+app.get("/modules", (req, res) => {
+  con.query(`SELECT DISTINCT module FROM scores`, (err, result) => {
     if (err) {
       console.log(err);
       res.status(400).send("NOT OK");
@@ -54,7 +90,7 @@ function validInput(data) {
   );
 }
 
-app.post("/", (req, res) => {
+app.post("/add", (req, res) => {
   if (validInput(req.body)) {
     con.query(
       `INSERT INTO scores (name, subject, module, score) VALUES ('${
@@ -73,6 +109,24 @@ app.post("/", (req, res) => {
     );
   } else {
     res.status(400).send("NOT OK");
+  }
+});
+
+app.delete("/delete/:id", (req, res) => {
+  if (req.params.id !== "") {
+    con.query(
+      `DELETE FROM scores WHERE id = ${req.params.id}`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          res.status(400).send("NOT DELETED");
+        } else {
+          res.send("DELETED");
+        }
+      }
+    );
+  } else {
+    res.send("NOT DELETED");
   }
 });
 
